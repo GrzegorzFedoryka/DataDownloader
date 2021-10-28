@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,18 +9,18 @@ namespace DataDownloader
 {
     class Program
     {
-        static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var host = CreateHostBuilder(args).Build();
+            await CreateHostBuilder(args).RunConsoleAsync();
 
-            var streamReader = new StreamReader();
+            var streamReader = new IoReader();
 
-            streamReader.RedirectToStreamReader(host);
+            //streamReader.RedirectToStreamReader(host);
 
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Goodbye World!");
         }
 
-        static IConfiguration CreateConfiguration(string[] args)
+        private static IConfiguration CreateConfiguration(string[] args)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -39,8 +40,9 @@ namespace DataDownloader
             var hostBuilder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((hostContext, services) =>
             {
+                services.AddHostedService<ConsoleHostedService>();
                 services.AddSingleton(urlRegex);
-                services.AddSingleton<TextReader>();
+                services.AddScoped<IIoReader, IoReader>();
             });
 
             return hostBuilder;

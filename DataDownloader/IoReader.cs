@@ -8,15 +8,16 @@ using Microsoft.Extensions.Hosting;
 
 namespace DataDownloader
 {
-    class StreamReader
+    public delegate char ReadCharDelegate();
+    public delegate bool CheckIfIoIsEmpty();
+    interface IIoReader
     {
-        public void RedirectToStreamReader(IHost host)
-        {
-            while(true){
-            }
-        }
-
-        public static IEnumerable<string> ConsoleReadUntil(string delimiter)
+        IEnumerable<string> ReadUntil(string delimiter, ReadCharDelegate read, CheckIfIoIsEmpty isEmpty);
+    }
+    //taken from https://stackoverflow.com/questions/6655246/how-to-read-text-file-by-particular-line-separator-character
+    class IoReader : IIoReader
+    {
+        public IEnumerable<string> ReadUntil(string delimiter, ReadCharDelegate read, CheckIfIoIsEmpty isEmpty)
         {
             var buffer = new List<char>();
             var delim_buffer = new CircularBuffer<char>(delimiter.Length);
@@ -24,33 +25,49 @@ namespace DataDownloader
             bool isReadingEnded = false;
             while (true)
             {
+                if (isReadingEnded)
+                    yield break;
                 try
                 {
-                    c = (char)Console.Read();
+                    if (!isEmpty())
+                    {
+                        c = read();
+                    }
+                    else
+                    {
+                        isReadingEnded = true;
+                    }
+                    
                 }
-                catch (IOException)
+                catch (Exception)
                 {
-                    isReadingEnded = true; 
+                    Console.WriteLine("Unhandled exception");
                 }
 
                 if (isReadingEnded)
                 {
-                    yield return new String(buffer.ToArray());
-                    yield break;
+                    if(delim_buffer.ToString() == delimiter)
+                    {
+                        Console.WriteLine("to już koniec");
+                        yield return new String(buffer.ToArray()).Substring(0, buffer.Count - delimiter.Length);
+                    }
+                    else
+                    {
+                        Console.WriteLine("to już koniec2");
+                        yield return new String(buffer.ToArray());
+                    }
                 }
 
                 delim_buffer.Enqueue(c);
                 buffer.Add(c);
                 if (delim_buffer.ToString() == delimiter)
                 {
+                    Console.WriteLine("hej to ja, kolejny element");
                     yield return new String(buffer.ToArray()).Substring(0, buffer.Count - delimiter.Length);
                     buffer.Clear();
                 }
-
-                    
             }
         }
-        //Circular buffer taken from https://stackoverflow.com/questions/6655246/how-to-read-text-file-by-particular-line-separator-character
         private class CircularBuffer<T> : Queue<T>
         {
             private int _capacity;
