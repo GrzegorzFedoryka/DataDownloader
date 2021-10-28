@@ -11,11 +11,8 @@ namespace DataDownloader
     {
         private static async Task Main(string[] args)
         {
+            
             await CreateHostBuilder(args).RunConsoleAsync();
-
-            var streamReader = new IoReader();
-
-            //streamReader.RedirectToStreamReader(host);
 
             Console.WriteLine("Goodbye World!");
         }
@@ -43,6 +40,7 @@ namespace DataDownloader
                 services.AddHostedService<ConsoleHostedService>();
                 services.AddSingleton(urlRegex);
                 services.AddScoped<IIoReader, IoReader>();
+                services.AddScoped<ICommandParser, CommandParser>();
             });
 
             return hostBuilder;

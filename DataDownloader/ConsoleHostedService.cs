@@ -15,15 +15,18 @@ namespace DataDownloader
         private readonly ILogger _logger;
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IIoReader _ioReader;
+        private readonly ICommandParser _commandParser;
 
         public ConsoleHostedService(
             ILogger<ConsoleHostedService> logger,
             IHostApplicationLifetime appLifetime,
-            IIoReader ioReader)
+            IIoReader ioReader,
+            ICommandParser commandParser)
         {
             _logger = logger;
             _appLifetime = appLifetime;
             _ioReader = ioReader;
+            _commandParser = commandParser;
         }
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -36,18 +39,25 @@ namespace DataDownloader
                     try
                     {
                         _logger.LogInformation("Hello World!");
-                        ReadCharDelegate read = () => (char)Console.Read();
-                        CheckIfIoIsEmpty isEmpty = () => Console.In.Peek() == -1;
-                        while (true)
+
+                        var commandArguments = _commandParser.GetArguments(
+                            () => (char)Console.Read(),
+                            () => Console.In.Peek() == -1,
+                            () => (char)Console.In.Peek());
+                        foreach(var arg in commandArguments)
                         {
-                            var strings = _ioReader.ReadUntil(";", read, isEmpty);
-                            foreach (var _string in strings)
-                            {
-                                Console.WriteLine("Next element: ");
-                                Console.WriteLine(_string);
-                            }
-                            
+                            Console.WriteLine(arg);
                         }
+                        //var strings = _ioReader.ReadUntil(          //generator which reads from io stream
+                        //        ";",                                // delimiter
+                        //        () => (char)Console.Read(),         // stream read single char delegate
+                        //        () => Console.In.Peek() == -1);     // peek in input stream delegate
+                        
+                        //foreach (var _string in strings)
+                        //{
+                        //    Console.WriteLine("Next element: ");
+                        //    Console.WriteLine(_string);
+                        //}
                         await Task.Delay(1000);
                     }
                     catch (Exception ex)
