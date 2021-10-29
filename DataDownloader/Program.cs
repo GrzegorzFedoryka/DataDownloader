@@ -41,6 +41,8 @@ namespace DataDownloader
                 services.AddSingleton(urlRegex);
                 services.AddScoped<IIoReader, IoReader>();
                 services.AddScoped<ICommandParser, CommandParser>();
+                services.AddScoped<IUrlVerifier, UrlVerifier>();
+                services.AddScoped<ICommandExecutor, CommandExecutor>();
             });
 
             return hostBuilder;
