@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using DataDownloader.Models;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace DataDownloader
     {
         private readonly ILogger _logger;
         private readonly IHostApplicationLifetime _appLifetime;
-        private readonly IIoReader _ioReader;
+        //private readonly IIoReader _ioReader;
         private readonly ICommandParser _commandParser;
         private readonly IUrlVerifier _urlVerifier;
         private readonly ICommandExecutor _commandExecutor;
@@ -22,14 +23,14 @@ namespace DataDownloader
         public ConsoleHostedService(
             ILogger<ConsoleHostedService> logger,
             IHostApplicationLifetime appLifetime,
-            IIoReader ioReader,
+            //IIoReader ioReader,
             ICommandParser commandParser,
             IUrlVerifier urlVerifier,
             ICommandExecutor commandExecutor)
         {
             _logger = logger;
             _appLifetime = appLifetime;
-            _ioReader = ioReader;
+            //_ioReader = ioReader;
             _commandParser = commandParser;
             _urlVerifier = urlVerifier;
             _commandExecutor = commandExecutor;
@@ -44,30 +45,41 @@ namespace DataDownloader
                 {
                     try
                     {
+                        var targetFolderSettings = new TargetFolderSettings();
 
                         _logger.LogInformation("Hello World!");
-
-                        var commandArguments = _commandParser.GetArguments(
+                        var commandNameWithFlags = _commandParser.GetArguments(
                             () => (char)Console.Read(),
                             () => Console.In.Peek() == -1,
                             () => (char)Console.In.Peek());
-                        //foreach(var arg in commandArguments)
-                        //{
-                        //    Console.WriteLine(arg);
-                        //}
-                        _commandExecutor.ExecuteCommand(commandArguments);
-                        var strings = _ioReader.ReadUntil(          //generator which reads from io stream
-                                ";",                                // delimiter
-                                () => (char)Console.Read(),         // stream read single char delegate
-                                () => Console.In.Peek() == -1);     // peek in input stream delegate
 
-                        foreach (var _string in strings)
+                        Console.WriteLine(commandNameWithFlags.ToList()[0]);
+
+                        object commandResult = _commandExecutor.ExecuteCommand(commandNameWithFlags);
+                        if (commandResult != null)
                         {
-                            var isCorrect = _urlVerifier.IsUrlCorrect(_string);
-                            var exists = _urlVerifier.UrlExists(_string);
-                            Console.WriteLine("Next element: ");
-                            Console.WriteLine($"{_string} is correct: {isCorrect} exists: {exists}");
+                            if (commandResult.GetType() == targetFolderSettings.GetType())
+                            {
+                                targetFolderSettings = (TargetFolderSettings)commandResult;
+                                Console.WriteLine(targetFolderSettings.Directory);
+                            }
                         }
+                        Console.WriteLine(commandResult.GetType().ToString());
+                        
+                        ////_commandExecutor.ExecuteCommand(commandNameWithFlags);
+                        //var commandArguments = _ioReader.ReadUntil(          //generator which reads from io stream
+                        //        ";",                                // delimiter
+                        //        () => (char)Console.Read(),         // stream read single char delegate
+                        //        () => Console.In.Peek() == -1);     // peek in input stream delegate
+
+                        //foreach (var _string in (List<string>) commandArguments)
+                        //{
+                        //    //var isCorrect = _urlVerifier.IsUrlCorrect(_string);
+                        //    //var exists = _urlVerifier.UrlExists(_string);
+                        //    Console.WriteLine("Next element: ");
+                        //    //Console.WriteLine($"{_string} is correct: {isCorrect} exists: {exists}");
+                        //    Console.WriteLine($"{_string}");
+                        //}
                         await Task.Delay(1000);
                     }
                     catch (Exception ex)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DataDownloader.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace DataDownloader
 {
     interface ICommandExecutor
     {
-        string ExecuteCommand(IEnumerable<string> args);
+        object ExecuteCommand(IEnumerable<string> args);
     }
     class CommandExecutor : ICommandExecutor
     {
@@ -17,8 +18,21 @@ namespace DataDownloader
         private readonly ILogger<CommandExecutor> _logger;
         private readonly ICommand[] commands =
         {
-            new Command("read", (IEnumerable<string> t) => t.First()),
-            new Command("read2", (IEnumerable<string> t) => { Console.WriteLine("hehe"); "xD"; } //TODO
+            new Command("read", (IEnumerable<string> t) => t.First(), "xD"),
+            new Command("read2", (IEnumerable<string> t) => {
+                Console.WriteLine("hehe");
+                return null;
+            }, "xD"),
+            new Command("targetfolder", 
+                (args) => {
+                    var settings = new TargetFolderSettings { IsToCreateDirectiory = args.Contains("-c"), IsRelative = args.Contains("-r") };
+                    var directory = IoReader.ReadToEnd(
+                        () => Console.ReadLine(),
+                        () => Console.In.Peek() == -1);
+                    settings.Directory = string.IsNullOrEmpty(directory) ? AppDomain.CurrentDomain.BaseDirectory : directory;
+                    return settings;
+                }, 
+                "  ") //todo
         };
 
         public CommandExecutor(ICommandParser parser, ILogger<CommandExecutor> logger)
@@ -26,7 +40,7 @@ namespace DataDownloader
             _parser = parser;
             _logger = logger;
         }
-        public string ExecuteCommand(IEnumerable<string> args)
+        public object ExecuteCommand(IEnumerable<string> args)
         {
             var command = commands.FirstOrDefault(c => args.Contains(c.Name));
             if(command == null)
@@ -35,8 +49,17 @@ namespace DataDownloader
                 return null;
             }
             _logger.LogInformation($"Command {command.Name} is being executed.");
-            command.ExecuteCommand(args.Skip(1));
-            return command.Name;
+            var result = command.ExecuteCommand(args.Skip(1));
+            return result;
         }
+        private object HelpCommand(IEnumerable<string> args)
+        {
+            foreach (var command in commands)
+            {
+                Console.WriteLine(command.Description);
+            }
+            return null;
+        }
+
     }
 }

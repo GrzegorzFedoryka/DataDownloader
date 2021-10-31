@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using DataDownloader.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,7 +40,6 @@ namespace DataDownloader
             {
                 services.AddHostedService<ConsoleHostedService>();
                 services.AddSingleton(urlRegex);
-                services.AddScoped<IIoReader, IoReader>();
                 services.AddScoped<ICommandParser, CommandParser>();
                 services.AddScoped<IUrlVerifier, UrlVerifier>();
                 services.AddScoped<ICommandExecutor, CommandExecutor>();

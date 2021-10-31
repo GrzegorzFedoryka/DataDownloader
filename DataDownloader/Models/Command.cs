@@ -9,16 +9,19 @@ namespace DataDownloader
     interface ICommand
     {
         string Name { get; }
-        Action<IEnumerable<string>> ExecuteCommand { get; set; }
+        string Description { get; }
+        Func<IEnumerable<string>, object> ExecuteCommand { get; set; } //
     }
     class Command : ICommand
     {
-        public Command(string name, Action<IEnumerable<string>> command)
+        public Command(string name, Func<IEnumerable<string>, object> command, string description)
         {
             Name = name;
+            Description = description;
             ExecuteCommand = command;
         }
         public string Name { get; }
-        public Action<IEnumerable<string>> ExecuteCommand { get; set; }
+        public string Description { get; }
+        public Func<IEnumerable<string>, object> ExecuteCommand { get; set; }
     }
 }

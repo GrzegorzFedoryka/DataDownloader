@@ -11,7 +11,6 @@ namespace DataDownloader
 {
     interface IUrlVerifier
     {
-        public UrlRegex _regex { get; }
         bool IsUrlCorrect(string textToMatch);
         bool UrlExists(string url);
     }
@@ -19,7 +18,7 @@ namespace DataDownloader
     {
         private readonly ILogger<UrlVerifier> _logger;
 
-        public UrlRegex _regex { get; }
+        public UrlRegex _regex;
 
         public UrlVerifier(UrlRegex regex, ILogger<UrlVerifier> logger)
         {
@@ -54,7 +53,7 @@ namespace DataDownloader
                 return false;
             }
         }
-        private Uri GetUri(string s)
+        private static Uri GetUri(string s)
         {
             return new UriBuilder(s).Uri;
         }
