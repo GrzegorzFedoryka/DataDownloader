@@ -15,14 +15,12 @@ namespace DataDownloader
     }
     class CommandExecutor : ICommandExecutor
     {
-        private readonly ICommandParser _parser;
         private readonly ILogger<CommandExecutor> _logger;
         private readonly ICommandSeeder _seeder;
         private ICommand[] Commands { get; }
 
-        public CommandExecutor(ICommandParser parser, ILogger<CommandExecutor> logger, ICommandSeeder seeder)
+        public CommandExecutor(ILogger<CommandExecutor> logger, ICommandSeeder seeder)
         {
-            _parser = parser;
             _logger = logger;
             _seeder = seeder;
 
@@ -30,6 +28,11 @@ namespace DataDownloader
         }
         public async Task ExecuteCommandAsync(IEnumerable<string> args)
         {
+            if (args.Contains("help"))
+            {
+                HelpCommand();
+                return;
+            }
             var command = Commands.FirstOrDefault(c => args.Contains(c.Name));
             if(command == null)
             {
@@ -39,13 +42,12 @@ namespace DataDownloader
             _logger.LogInformation($"Command {command.Name} is being executed.");
             await command.ExecuteCommandAsync(args.Skip(1));
         }
-        private object HelpCommand(IEnumerable<string> args)
+        private void HelpCommand()
         {
             foreach (var command in Commands)
             {
-                Console.WriteLine(command.Description);
+                Console.WriteLine($"{command.Name}: {command.Description}");
             }
-            return null;
         }
 
     }

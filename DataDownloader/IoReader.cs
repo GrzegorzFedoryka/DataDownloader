@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
+using DataDownloader.Exceptions;
 
 namespace DataDownloader
 {
 
     //taken from https://stackoverflow.com/questions/6655246/how-to-read-text-file-by-particular-line-separator-character
-    class IoReader
+    public class IoReader
     {
         public static IEnumerable<string> ReadUntil(string delimiter, Func<char> read, Func<bool> isEmpty)
         {
@@ -41,7 +42,7 @@ namespace DataDownloader
                 {
                     if (buffer.Count - delimiter.Length < 0)
                     {
-                        throw new IndexOutOfRangeException("Delimiters overlap theirselves!");
+                        throw new DelimitersOverlapException("Delimiters overlap theirselves!");
                     }
                     yield return new String(buffer.ToArray()).Substring(0, buffer.Count - delimiter.Length);
                     buffer.Clear();
@@ -59,7 +60,7 @@ namespace DataDownloader
             }
             else
             {
-                return null;
+                return string.Empty;
             }
             return buffer.ToString();
         }

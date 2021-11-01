@@ -50,14 +50,6 @@ namespace DataDownloader
                         _logger.LogInformation("Hello World!");
                         while (true)
                         {
-                            if(Console.In.Peek() == -1)
-                            {
-                                Console.WriteLine("Stream is empty");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Console is not empty");
-                            }
                             var commandNameWithFlags = _commandParser.GetArguments(
                                 () => (char)Console.Read(),
                                 () => Console.In.Peek() == -1,
@@ -66,8 +58,15 @@ namespace DataDownloader
                             
                             if(commandNameWithFlags != null && commandNameWithFlags.Any())
                             {
-                                Console.WriteLine(commandNameWithFlags.ToList()[0]);
-                                await _commandExecutor.ExecuteCommandAsync(commandNameWithFlags);
+                                _logger.LogInformation(commandNameWithFlags.ToList()[0]);
+                                try
+                                {
+                                    await _commandExecutor.ExecuteCommandAsync(commandNameWithFlags);
+                                }
+                                catch
+                                {
+                                    _logger.LogError("Unable to execute command. Try execute command without flags.");
+                                }
                             }
                             
                         }
