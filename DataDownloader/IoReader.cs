@@ -10,11 +10,6 @@ using System.Threading;
 namespace DataDownloader
 {
 
-    //interface IIoReader
-    //{
-    //    IEnumerable<string> ReadUntil(string delimiter, Func<char> read, Func<bool> isEmpty);
-    //    public char PeekIo(Func<char> checkNextChar);
-    //}
     //taken from https://stackoverflow.com/questions/6655246/how-to-read-text-file-by-particular-line-separator-character
     class IoReader
     {
@@ -23,11 +18,13 @@ namespace DataDownloader
             var buffer = new List<char>();
             var delim_buffer = new CircularBuffer<char>(delimiter.Length);
             char c;
+            bool hasStartedReading = false;
             while (true)
             {
-                if (!isEmpty())
+                if (!isEmpty() || hasStartedReading == false)
                 {
                     c = read();
+                    hasStartedReading = true;
                 }
                 else
                 {

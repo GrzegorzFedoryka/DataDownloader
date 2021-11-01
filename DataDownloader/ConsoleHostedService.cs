@@ -46,41 +46,31 @@ namespace DataDownloader
                     try
                     {
                         var targetFolderSettings = new TargetFolderSettings();
-
+                        Thread.Sleep(1000);
                         _logger.LogInformation("Hello World!");
-                        var commandNameWithFlags = _commandParser.GetArguments(
-                            () => (char)Console.Read(),
-                            () => Console.In.Peek() == -1,
-                            () => (char)Console.In.Peek());
-
-                        Console.WriteLine(commandNameWithFlags.ToList()[0]);
-
-                        object commandResult = _commandExecutor.ExecuteCommand(commandNameWithFlags);
-                        if (commandResult != null)
+                        while (true)
                         {
-                            if (commandResult.GetType() == targetFolderSettings.GetType())
+                            if(Console.In.Peek() == -1)
                             {
-                                targetFolderSettings = (TargetFolderSettings)commandResult;
-                                Console.WriteLine(targetFolderSettings.Directory);
+                                Console.WriteLine("Stream is empty");
                             }
-                        }
-                        Console.WriteLine(commandResult.GetType().ToString());
-                        
-                        ////_commandExecutor.ExecuteCommand(commandNameWithFlags);
-                        //var commandArguments = _ioReader.ReadUntil(          //generator which reads from io stream
-                        //        ";",                                // delimiter
-                        //        () => (char)Console.Read(),         // stream read single char delegate
-                        //        () => Console.In.Peek() == -1);     // peek in input stream delegate
+                            else
+                            {
+                                Console.WriteLine("Console is not empty");
+                            }
+                            var commandNameWithFlags = _commandParser.GetArguments(
+                                () => (char)Console.Read(),
+                                () => Console.In.Peek() == -1,
+                                () => (char)Console.In.Peek());
 
-                        //foreach (var _string in (List<string>) commandArguments)
-                        //{
-                        //    //var isCorrect = _urlVerifier.IsUrlCorrect(_string);
-                        //    //var exists = _urlVerifier.UrlExists(_string);
-                        //    Console.WriteLine("Next element: ");
-                        //    //Console.WriteLine($"{_string} is correct: {isCorrect} exists: {exists}");
-                        //    Console.WriteLine($"{_string}");
-                        //}
-                        await Task.Delay(1000);
+                            
+                            if(commandNameWithFlags != null && commandNameWithFlags.Any())
+                            {
+                                Console.WriteLine(commandNameWithFlags.ToList()[0]);
+                                await _commandExecutor.ExecuteCommandAsync(commandNameWithFlags);
+                            }
+                            
+                        }
                     }
                     catch (Exception ex)
                     {

@@ -10,18 +10,17 @@ namespace DataDownloader
     {
         string Name { get; }
         string Description { get; }
-        Func<IEnumerable<string>, object> ExecuteCommand { get; set; } //
+        Task ExecuteCommandAsync(IEnumerable<string> args);
     }
-    class Command : ICommand
+    abstract class Command : ICommand
     {
-        public Command(string name, Func<IEnumerable<string>, object> command, string description)
+        public Command(string name, string description)
         {
             Name = name;
             Description = description;
-            ExecuteCommand = command;
         }
         public string Name { get; }
         public string Description { get; }
-        public Func<IEnumerable<string>, object> ExecuteCommand { get; set; }
+        public abstract Task ExecuteCommandAsync(IEnumerable<string> args);
     }
 }

@@ -35,14 +35,19 @@ namespace DataDownloader
             var urlRegex = new UrlRegex();
             configuration.GetSection("UrlRegex").Bind(urlRegex);
 
+            var targetFolderSettings = new TargetFolderSettings();
+
             var hostBuilder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddHostedService<ConsoleHostedService>();
                 services.AddSingleton(urlRegex);
+                services.AddSingleton(targetFolderSettings);
                 services.AddScoped<ICommandParser, CommandParser>();
                 services.AddScoped<IUrlVerifier, UrlVerifier>();
                 services.AddScoped<ICommandExecutor, CommandExecutor>();
+                services.AddScoped<ICommandSeeder, CommandSeeder>();
+                services.AddHttpClient();
             });
 
             return hostBuilder;

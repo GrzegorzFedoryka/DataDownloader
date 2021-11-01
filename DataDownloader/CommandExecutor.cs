@@ -1,4 +1,5 @@
-﻿using DataDownloader.Models;
+﻿using DataDownloader.Commands;
+using DataDownloader.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,51 +11,37 @@ namespace DataDownloader
 {
     interface ICommandExecutor
     {
-        object ExecuteCommand(IEnumerable<string> args);
+        Task ExecuteCommandAsync(IEnumerable<string> args);
     }
     class CommandExecutor : ICommandExecutor
     {
         private readonly ICommandParser _parser;
         private readonly ILogger<CommandExecutor> _logger;
-        private readonly ICommand[] commands =
-        {
-            new Command("read", (IEnumerable<string> t) => t.First(), "xD"),
-            new Command("read2", (IEnumerable<string> t) => {
-                Console.WriteLine("hehe");
-                return null;
-            }, "xD"),
-            new Command("targetfolder", 
-                (args) => {
-                    var settings = new TargetFolderSettings { IsToCreateDirectiory = args.Contains("-c"), IsRelative = args.Contains("-r") };
-                    var directory = IoReader.ReadToEnd(
-                        () => Console.ReadLine(),
-                        () => Console.In.Peek() == -1);
-                    settings.Directory = string.IsNullOrEmpty(directory) ? AppDomain.CurrentDomain.BaseDirectory : directory;
-                    return settings;
-                }, 
-                "  ") //todo
-        };
+        private readonly ICommandSeeder _seeder;
+        private ICommand[] Commands { get; }
 
-        public CommandExecutor(ICommandParser parser, ILogger<CommandExecutor> logger)
+        public CommandExecutor(ICommandParser parser, ILogger<CommandExecutor> logger, ICommandSeeder seeder)
         {
             _parser = parser;
             _logger = logger;
+            _seeder = seeder;
+
+            Commands = _seeder.GetCommands();
         }
-        public object ExecuteCommand(IEnumerable<string> args)
+        public async Task ExecuteCommandAsync(IEnumerable<string> args)
         {
-            var command = commands.FirstOrDefault(c => args.Contains(c.Name));
+            var command = Commands.FirstOrDefault(c => args.Contains(c.Name));
             if(command == null)
             {
                 _logger.LogInformation("Command doesn't exist. Try help to check available commands list.");
-                return null;
+                return;
             }
             _logger.LogInformation($"Command {command.Name} is being executed.");
-            var result = command.ExecuteCommand(args.Skip(1));
-            return result;
+            await command.ExecuteCommandAsync(args.Skip(1));
         }
         private object HelpCommand(IEnumerable<string> args)
         {
-            foreach (var command in commands)
+            foreach (var command in Commands)
             {
                 Console.WriteLine(command.Description);
             }

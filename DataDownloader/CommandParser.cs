@@ -14,11 +14,18 @@ namespace DataDownloader
     {
         public IEnumerable<string> GetArguments(Func<char> read, Func<bool> isEmpty, Func<char> peek)
         {
+            //var reader = new IoReader();
             var readings = IoReader.ReadUntil(" ", read, isEmpty);
             var commandArguments = new List<string>();
-
-            var commandName = readings.First();
-            commandArguments.Add(commandName);
+            var enumerator = readings.GetEnumerator();
+            enumerator.MoveNext();
+            var commandName = enumerator.Current;
+            if (!string.IsNullOrEmpty(commandName))
+            {
+                commandArguments.Add(commandName);
+            }
+            if (isEmpty()) { return commandArguments; }
+            
 
             while(IoReader.PeekIo(peek) == '-')
             {
