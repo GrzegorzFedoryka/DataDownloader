@@ -15,24 +15,18 @@ namespace DataDownloader
     {
         private readonly ILogger _logger;
         private readonly IHostApplicationLifetime _appLifetime;
-        //private readonly IIoReader _ioReader;
         private readonly ICommandParser _commandParser;
-        private readonly IUrlVerifier _urlVerifier;
         private readonly ICommandExecutor _commandExecutor;
 
         public ConsoleHostedService(
             ILogger<ConsoleHostedService> logger,
             IHostApplicationLifetime appLifetime,
-            //IIoReader ioReader,
             ICommandParser commandParser,
-            IUrlVerifier urlVerifier,
             ICommandExecutor commandExecutor)
         {
             _logger = logger;
             _appLifetime = appLifetime;
-            //_ioReader = ioReader;
             _commandParser = commandParser;
-            _urlVerifier = urlVerifier;
             _commandExecutor = commandExecutor;
         }
         public Task StartAsync(CancellationToken cancellationToken)
@@ -50,10 +44,7 @@ namespace DataDownloader
                         _logger.LogInformation("Hello World!");
                         while (true)
                         {
-                            var commandNameWithFlags = _commandParser.GetArguments(
-                                () => (char)Console.Read(),
-                                () => Console.In.Peek() == -1,
-                                () => (char)Console.In.Peek());
+                            var commandNameWithFlags = _commandParser.GetArguments();
 
                             
                             if(commandNameWithFlags != null && commandNameWithFlags.Any())

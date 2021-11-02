@@ -21,6 +21,7 @@ namespace DataDownloader
         private static IConfiguration CreateConfiguration(string[] args)
         {
             IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .AddCommandLine(args)
@@ -37,6 +38,13 @@ namespace DataDownloader
 
             var targetFolderSettings = new TargetFolderSettings();
 
+            var ioReader = new IoReader(
+                () => (char)Console.Read(),
+                () => Console.In.Peek() == -1,
+                () => Console.ReadLine(),
+                () => (char)Console.In.Peek()
+                );
+
             var hostBuilder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((hostContext, services) =>
             {
@@ -44,10 +52,12 @@ namespace DataDownloader
                 services.AddSingleton(urlRegex);
                 services.AddSingleton(targetFolderSettings);
                 services.AddScoped<ICommandParser, CommandParser>();
-                services.AddScoped<IUrlVerifier, UrlVerifier>();
+                
                 services.AddScoped<ICommandExecutor, CommandExecutor>();
                 services.AddScoped<ICommandSeeder, CommandSeeder>();
                 services.AddHttpClient();
+                services.AddSingleton<IIoReader>(ioReader);
+                services.AddScoped<IUrlVerifier, UrlVerifier>();
             });
 
             return hostBuilder;

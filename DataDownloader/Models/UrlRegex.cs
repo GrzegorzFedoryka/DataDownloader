@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DataDownloader
 {
-    class UrlRegex
+    public class UrlRegex
     {
         public string Regex { get; set; }
     }

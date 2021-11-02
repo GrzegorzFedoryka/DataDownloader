@@ -10,6 +10,20 @@ namespace TestDataDownloader
     [TestClass]
     public class TestsIoReader
     {
+        private readonly ServiceProvider serviceProvider;
+        private CustomStream Stream { set; get; } = new CustomStream("");
+        public TestsIoReader()
+        {
+            var services = new ServiceCollection();
+            var reader = new IoReader(Stream.Read,
+                Stream.IsEmpty,
+                Stream.ReadToEnd,
+                Stream.Peek);
+
+            services.AddSingleton<IIoReader>(reader);
+
+            serviceProvider = services.BuildServiceProvider();
+        }
         private class CustomStream
         {
             public Queue<char> StreamInput { get; set; }
@@ -40,23 +54,33 @@ namespace TestDataDownloader
                 }
                 return sb.ToString();
             }
-        }
-        public TestsIoReader()
-        {
-
+            public char Peek()
+            {
+                return StreamInput.Peek();
+            }
+            public void Write(string text)
+            {
+                foreach (char c in text) { this.StreamInput.Enqueue(c); }
+            }
+            public void CleanInput()
+            {
+                while (!IsEmpty())
+                {
+                    StreamInput.Dequeue();
+                }
+            }
         }
         [TestMethod]
         public void TestReadUntilSemicolon_ShouldReturnThreeCorrectElements()
         {
             //arrange
-            var stream = new CustomStream("Techno;Rock;Rap");
+            Stream.CleanInput();
+            Stream.Write("Techno;Rock;Rap");
             var expectedOutput = new List<string>() { "Techno", "Rock", "Rap" };
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
 
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";");
 
             var readings = new List<string>();
             foreach(var reading in ioReadings) { readings.Add(reading); }
@@ -68,14 +92,13 @@ namespace TestDataDownloader
         public void TestReadUntilSemicolon_ShouldReturnTwoCorrectElements()
         {
             //arrange
-            var stream = new CustomStream("Techno;Rock;");
+            Stream.CleanInput();
+            Stream.Write("Techno;Rock;");
             var expectedOutput = new List<string>() { "Techno", "Rock" };
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
 
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";");
 
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
@@ -87,14 +110,12 @@ namespace TestDataDownloader
         public void TestReadUntilSemicolon_ShouldReturnTwoCorrectElementsAndEmptyString()
         {
             //arrange
-            var stream = new CustomStream("Techno;;Rock;");
+            Stream.CleanInput();
+            Stream.Write("Techno;;Rock;");
             var expectedOutput = new List<string>() { "Techno", "", "Rock" };
-
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";");
 
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
@@ -106,14 +127,12 @@ namespace TestDataDownloader
         public void TestReadUntilTwoSemicolons_ShouldReturnThreeCorrectElements()
         {
             //arrange
-            var stream = new CustomStream("Techno;;Rap;;Rock");
+            Stream.CleanInput();
+            Stream.Write("Techno;;Rap;;Rock");
             var expectedOutput = new List<string>() { "Techno", "Rap", "Rock" };
-
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";;",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";;");
 
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
@@ -125,14 +144,12 @@ namespace TestDataDownloader
         public void TestReadUntilTwoSemicolons_ShouldReturnTwoCorrectElements()
         {
             //arrange
-            var stream = new CustomStream("Techno;;Rap;Rock");
+            Stream.CleanInput();
+            Stream.Write("Techno;;Rap;Rock");
             var expectedOutput = new List<string>() { "Techno", "Rap;Rock" };
-
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";;",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";;");
 
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
@@ -145,13 +162,11 @@ namespace TestDataDownloader
         public void TestReadUntilTwoSemicolons_ShouldThrowDelimiterOverlapException()
         {
             //arrange
-            var stream = new CustomStream("Techno;;;Rap;Rock");
-
+            Stream.CleanInput();
+            Stream.Write("Techno;;;Rap;Rock");
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";;",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";;");
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
         }
@@ -161,13 +176,10 @@ namespace TestDataDownloader
         public void TestReadUntilTwoSemicolons_ShouldThrowInvalidOperationException()
         {
             //arrange
-            var stream = new CustomStream("");
-
+            Stream.CleanInput();
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReadings = IoReader.ReadUntil(
-                ";;",
-                stream.Read,
-                stream.IsEmpty);
+            var ioReadings = reader.ReadUntil(";;");
             var readings = new List<string>();
             foreach (var reading in ioReadings) { readings.Add(reading); }
         }
@@ -175,13 +187,12 @@ namespace TestDataDownloader
         public void TestReadToEndNotEmptyString_ShouldReturnString()
         {
             //arrange
-            var stream = new CustomStream("Techno;;;Rap;Rock");
+            Stream.CleanInput();
+            Stream.Write("Techno;;;Rap;Rock");
             string expectedReturn = "Techno;;;Rap;Rock";
-
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReading = IoReader.ReadToEnd(
-                stream.ReadToEnd,
-                stream.IsEmpty);
+            var ioReading = reader.ReadToEnd();
 
             //assert
             Assert.AreEqual(ioReading, expectedReturn);
@@ -190,13 +201,11 @@ namespace TestDataDownloader
         public void TestReadToEndEmptyString_ShouldReturnEmptyString()
         {
             //arrange
-            var stream = new CustomStream("");
+            Stream.CleanInput();
             string expectedReturn = "";
-
+            var reader = serviceProvider.GetRequiredService<IIoReader>();
             //act
-            var ioReading = IoReader.ReadToEnd(
-                stream.ReadToEnd,
-                stream.IsEmpty);
+            var ioReading = reader.ReadToEnd();
 
             //assert
             Assert.AreEqual(ioReading, expectedReturn);

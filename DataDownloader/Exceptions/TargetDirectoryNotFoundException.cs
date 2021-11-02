@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataDownloader.Exceptions
 {
-    class DirectoryNotFoundException : Exception
+    class TargetDirectoryNotFoundException : Exception
     {
-        public DirectoryNotFoundException(string message) : base(message)
+        public TargetDirectoryNotFoundException(string message) : base(message)
         {
 
         }

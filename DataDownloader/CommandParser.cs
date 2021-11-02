@@ -6,16 +6,21 @@ using System.Threading.Tasks;
 
 namespace DataDownloader
 {
-    interface ICommandParser
+    public interface ICommandParser
     {
-        IEnumerable<string> GetArguments(Func<char> read, Func<bool> isEmpty, Func<char> peek);
+        IEnumerable<string> GetArguments();
     }
-    class CommandParser : ICommandParser
+    public class CommandParser : ICommandParser
     {
-        public IEnumerable<string> GetArguments(Func<char> read, Func<bool> isEmpty, Func<char> peek)
+        private readonly IIoReader _reader;
+
+        public CommandParser(IIoReader reader)
         {
-            //var reader = new IoReader();
-            var readings = IoReader.ReadUntil(" ", read, isEmpty);
+            _reader = reader;
+        }
+        public IEnumerable<string> GetArguments()
+        {
+            var readings = _reader.ReadUntil(" ");
             var commandArguments = new List<string>();
             var enumerator = readings.GetEnumerator();
             enumerator.MoveNext();
@@ -24,12 +29,13 @@ namespace DataDownloader
             {
                 commandArguments.Add(commandName);
             }
-            if (isEmpty()) { return commandArguments; }
             
 
-            while(IoReader.PeekIo(peek) == '-')
+            while(_reader.PeekIo() == '-')
             {
-                commandArguments.Add(readings.First());
+                enumerator.MoveNext();
+                var argument = enumerator.Current;
+                commandArguments.Add(argument);
             }
 
             return commandArguments;

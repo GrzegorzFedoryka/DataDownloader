@@ -10,11 +10,29 @@ using DataDownloader.Exceptions;
 
 namespace DataDownloader
 {
+    public interface IIoReader
+    {
+        char PeekIo();
+        string ReadToEnd();
+        IEnumerable<string> ReadUntil(string delimiter);
+    }
 
     //taken from https://stackoverflow.com/questions/6655246/how-to-read-text-file-by-particular-line-separator-character
-    public class IoReader
+    public class IoReader : IIoReader
     {
-        public static IEnumerable<string> ReadUntil(string delimiter, Func<char> read, Func<bool> isEmpty)
+        private readonly Func<char> _read;
+        private readonly Func<bool> _isEmpty;
+        private readonly Func<string> _readToEnd;
+        private readonly Func<char> _checkNextChar;
+
+        public IoReader(Func<char> read, Func<bool> isEmpty, Func<string> readToEnd, Func<char> checkNextChar)
+        {
+            _read = read;
+            _isEmpty = isEmpty;
+            _readToEnd = readToEnd;
+            _checkNextChar = checkNextChar;
+        }
+        public IEnumerable<string> ReadUntil(string delimiter)
         {
             var buffer = new List<char>();
             var delim_buffer = new CircularBuffer<char>(delimiter.Length);
@@ -22,9 +40,9 @@ namespace DataDownloader
             bool hasStartedReading = false;
             while (true)
             {
-                if (!isEmpty() || hasStartedReading == false)
+                if (!_isEmpty() || hasStartedReading == false)
                 {
-                    c = read();
+                    c = _read();
                     hasStartedReading = true;
                 }
                 else
@@ -51,12 +69,12 @@ namespace DataDownloader
             yield break;
         }
 
-        public static string ReadToEnd(Func<string> readToEnd, Func<bool> isEmpty)
+        public string ReadToEnd()
         {
             var buffer = new StringBuilder();
-            if (!isEmpty())
+            if (!_isEmpty())
             {
-                buffer.Append(readToEnd());
+                buffer.Append(_readToEnd());
             }
             else
             {
@@ -64,9 +82,9 @@ namespace DataDownloader
             }
             return buffer.ToString();
         }
-        public static char PeekIo(Func<char> checkNextChar)
+        public char PeekIo()
         {
-            var nextChar = checkNextChar();
+            var nextChar = _checkNextChar();
             return nextChar;
         }
         private class CircularBuffer<T> : Queue<T>

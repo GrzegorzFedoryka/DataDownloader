@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace DataDownloader
 {
-    interface ICommandExecutor
+    public interface ICommandExecutor
     {
         Task ExecuteCommandAsync(IEnumerable<string> args);
     }
-    class CommandExecutor : ICommandExecutor
+    public class CommandExecutor : ICommandExecutor
     {
         private readonly ILogger<CommandExecutor> _logger;
         private readonly ICommandSeeder _seeder;

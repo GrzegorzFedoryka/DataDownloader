@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace DataDownloader.Exceptions
 {
-    class UrlIncorrectException
+    class UrlIncorrectException : Exception
     {
+        public UrlIncorrectException(string message) : base(message)
+        {
+
+        }
     }
 }

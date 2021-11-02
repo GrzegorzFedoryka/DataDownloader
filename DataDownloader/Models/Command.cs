@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace DataDownloader
 {
-    interface ICommand
+    public interface ICommand
     {
         string Name { get; }
         string Description { get; }
         Task ExecuteCommandAsync(IEnumerable<string> args);
     }
-    abstract class Command : ICommand
+    public abstract class Command : ICommand
     {
         public Command(string name, string description)
         {
